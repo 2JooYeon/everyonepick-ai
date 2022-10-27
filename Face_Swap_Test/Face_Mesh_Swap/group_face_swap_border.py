@@ -307,9 +307,9 @@ def triangulation_two_faces(lines_space_mask, indexes_triangles, source_img, sou
 ''' face swap 함수 테스트 (사용자 선택 고려 X)'''
 if __name__ == "__main__":
 
-    source_img_path = '../img_data/yuna_source.jpeg'
-    target_img_path = '../img_data/yuna_target.jpeg'
-    user_img_path = '../img_data/js.jpeg'
+    source_img_path = '../../img_data/yuna_source.jpeg'
+    target_img_path = '../../img_data/yuna_target.jpeg'
+    user_img_path = '../../img_data/js.jpeg'
 
     source_img = cv2.imread(source_img_path)
     # source_img = source_img[:, :, ::-1]

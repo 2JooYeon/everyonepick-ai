@@ -4,7 +4,7 @@ import numpy
 import matplotlib.pyplot as plt
 import sys
 
-PREDICTOR_PATH = "../shape_predictor_68_face_landmarks.dat"
+PREDICTOR_PATH = "../../shape_predictor_68_face_landmarks.dat"
 SCALE_FACTOR = 1
 FEATHER_AMOUNT = 11
 
@@ -162,8 +162,8 @@ def correct_colours(im1, im2, landmarks1):
             im2_blur.astype(numpy.float64))
 
 
-im1, landmarks1 = read_im_and_landmarks('../img_data/yuna_target.jpeg')
-im2, landmarks2 = read_im_and_landmarks('../img_data/yuna_source.jpeg')
+im1, landmarks1 = read_im_and_landmarks('../jooyeon.JPG')
+im2, landmarks2 = read_im_and_landmarks('../img_data/who2.png')
 
 M = transformation_from_points(landmarks1[ALIGN_POINTS],
                                landmarks2[ALIGN_POINTS])
