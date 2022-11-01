@@ -146,13 +146,18 @@ source_seg_mask = np.zeros_like(target_img_gray)
 # d1_mask[t_start_y:t_end_y+1, t_start_x:t_end_x+1] = white_source_seg[s_start_y:s_end_y+1, s_start_x:s_end_x+1]
 source_seg_mask[t_start_y:t_end_y+1, t_start_x:t_end_x+1] = source_seg_labels[s_start_y:s_end_y+1, s_start_x:s_end_x+1]
 
-# hair label에 해당하는 픽셀만 255, 나머지 0
-source_hair_seg = np.where(source_seg_mask == 10, 255, 0)
-source_hair_seg = source_hair_seg.astype(np.uint8)
-
 # 얼굴에 해당하는 픽셀만 255, 나머지 0
 source_face_seg = np.where((0 < source_seg_mask) & (source_seg_mask < 10), 255, 0)
 source_face_seg = source_face_seg.astype(np.uint8)
+
+source_face_seg_box = np.where(source_face_seg > 0)
+face_seg_y2 = max(source_face_seg_box[0])
+
+# hair label에 해당하는 픽셀만 255, 나머지 0
+source_hair_seg = np.where(source_seg_mask == 10, 255, 0)
+# face segmentation 보다 아래에 있는 머리는 지우도록
+source_hair_seg[face_seg_y2:,:]=0
+source_hair_seg = source_hair_seg.astype(np.uint8)
 
 # target (hair+얼굴) 픽셀 범위에 존재하는 source hair 픽셀만 남기도록
 hair_mask = cv2.bitwise_and(source_hair_seg, source_hair_seg, mask=target_seg_labels)
