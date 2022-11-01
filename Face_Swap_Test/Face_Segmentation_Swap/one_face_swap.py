@@ -57,6 +57,7 @@ with torch.inference_mode():
     target_faces = face_parser(target_tensor, target_faces)
 
 
+'''label names order -> ['background', 'face', 'rb', 'lb', 're', 'le', 'nose', 'ulip', 'imouth', 'llip', 'hair']'''
 source_seg_logits = source_faces['seg']['logits'][0]
 source_seg_probs = source_seg_logits.softmax(dim=0)
 source_seg_labels = source_seg_probs.argmax(dim=0)
@@ -72,21 +73,14 @@ target_seg_labels = target_seg_labels.numpy()
 
 '''source segmentation 경계 추출'''
 source_seg_box = np.where(source_seg_labels > 0)
-white_source_seg = np.where(source_seg_labels>0, 255, 0)
-white_source_seg=white_source_seg.astype(np.uint8)
+# white_source_seg = np.where(source_seg_labels > 0, 255, 0)
+# white_source_seg = white_source_seg.astype(np.uint8)
 
 
 # x1, y1, x2, y2
 seg_x1, seg_y1, seg_x2, seg_y2 = [min(source_seg_box[1]), min(source_seg_box[0]), max(source_seg_box[1]), max(source_seg_box[0])]
 source_seg_h = seg_y2-seg_y1
 source_seg_w = seg_x2-seg_x1
-print(source_seg_h, source_seg_w)
-
-source_face_image = cv2.bitwise_and(source_img_resized, source_img_resized, mask=source_seg_labels)
-
-
-'''target 이미지 크기와 동일한 마스크 생성'''
-d3_mask=np.zeros(target_img.shape, np.uint8)
 
 source_x1, source_y1, source_x2, source_y2 = get_bbox(source_img_resized)
 source_cx, source_cy = int((source_x1+source_x2)//2), int((source_y1+source_y2)//2)
@@ -138,16 +132,36 @@ if end_x <= target_img.shape[1]:
     s_end_x = seg_x2
 
 
-'''ValueError: could not broadcast input array from shape (4910,1987,3) into shape (2690,1987,3)'''
-d3_mask[t_start_y:t_end_y, t_start_x:t_end_x] = source_face_image[s_start_y:s_end_y, s_start_x:s_end_x]
+source_face_image = cv2.bitwise_and(source_img_resized, source_img_resized, mask=source_seg_labels)
 
-img_gray = cv2.cvtColor(target_img, cv2.COLOR_BGR2GRAY)
-d1_mask = np.zeros_like(img_gray)
-d1_mask[t_start_y:t_end_y, t_start_x:t_end_x] = white_source_seg[s_start_y:s_end_y, s_start_x:s_end_x]
-mask = cv2.bitwise_and(d1_mask, d1_mask, mask=target_seg_labels)
+'''target 이미지 크기와 동일한 마스크 생성(3차원)'''
+source_face_mask = np.zeros(target_img.shape, np.uint8)
+source_face_mask[t_start_y:t_end_y+1, t_start_x:t_end_x+1] = source_face_image[s_start_y:s_end_y+1, s_start_x:s_end_x+1]
 
-source_fg = cv2.bitwise_and(d3_mask, d3_mask, mask=mask)
-target_bg = cv2.bitwise_and(target_img, target_img, mask=cv2.bitwise_not(mask))
+'''target 이미지 크기와 동일한 마스크 생성(1차원)'''
+target_img_gray = cv2.cvtColor(target_img, cv2.COLOR_BGR2GRAY)
+# d1_mask = np.zeros_like(target_img_gray)
+source_seg_mask = np.zeros_like(target_img_gray)
+
+# d1_mask[t_start_y:t_end_y+1, t_start_x:t_end_x+1] = white_source_seg[s_start_y:s_end_y+1, s_start_x:s_end_x+1]
+source_seg_mask[t_start_y:t_end_y+1, t_start_x:t_end_x+1] = source_seg_labels[s_start_y:s_end_y+1, s_start_x:s_end_x+1]
+
+# hair label에 해당하는 픽셀만 255, 나머지 0
+source_hair_seg = np.where(source_seg_mask == 10, 255, 0)
+source_hair_seg = source_hair_seg.astype(np.uint8)
+
+# 얼굴에 해당하는 픽셀만 255, 나머지 0
+source_face_seg = np.where((0 < source_seg_mask) & (source_seg_mask < 10), 255, 0)
+source_face_seg = source_face_seg.astype(np.uint8)
+
+# target (hair+얼굴) 픽셀 범위에 존재하는 source hair 픽셀만 남기도록
+hair_mask = cv2.bitwise_and(source_hair_seg, source_hair_seg, mask=target_seg_labels)
+hair_face_mask = cv2.add(hair_mask, source_face_seg)
+
+# mask = cv2.bitwise_and(d1_mask, d1_mask, mask=target_seg_labels)
+
+source_fg = cv2.bitwise_and(source_face_mask, source_face_mask, mask=hair_face_mask)
+target_bg = cv2.bitwise_and(target_img, target_img, mask=cv2.bitwise_not(hair_face_mask))
 result = cv2.add(target_bg, source_fg)
 cv2.imshow("result", result)
 cv2.waitKey()
