@@ -57,10 +57,11 @@ async def recognize(input_data: UserFace, ctx:bentoml.Context):
         return {"message": "Too many face"}
 
     embedding = await face_recognize_runner.recognize.async_run(cv_img, kpss[0])
-    str_embedding = np.array2string(embedding)
-    byte_embedding = io.BytesIO(str_embedding.encode())
+    # str_embedding = np.array2string(embedding)
+    # byte_embedding = io.BytesIO(str_embedding.encode())
+    byte_embedding = io.BytesIO(embedding.tobytes())
     s3 = boto3.client('s3')
-    s3.upload_fileobj(byte_embedding, 'everyonepick-ai-face-embedding-bucket', f"face{user_id}_embedding.txt")
+    s3.upload_fileobj(byte_embedding, 'everyonepick-ai-face-embedding-bucket', f"face{user_id}_embedding")
     return {"message":"Ok", "data": {"user_id":user_id, "face_embedding":embedding}}
 
 
