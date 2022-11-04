@@ -54,3 +54,16 @@ def find_base_photo_id(user_choices):
     base_photo_id = sorted_photo_id_count[0][0]
 
     return base_photo_id
+
+
+# face swap이 필요한 user_id와 source 사진을 찾는 함수
+def list_of_face_swap(user_choices, base_photo_id):
+    user_id_choice = []
+
+    for user_id, choices in user_choices.items():
+        print(user_id, choices)
+        if base_photo_id not in choices:
+            # 첫 번째 선택 사진을 source 사진으로 결정
+            user_id_choice.append((user_id, choices[0]))
+
+    return user_id_choice
