@@ -36,3 +36,21 @@ for pick in json_object["pick_info_photos"]:
     f.seek(0)
     embedding = np.frombuffer(f.read(), dtype=np.float32)
     user_embedding[user_id] = embedding
+
+
+# 가장 많은 선택을 받은 사진의 인덱스를 찾는 함수
+def find_base_photo_id(user_choices):
+    # 아무도 선택 하지 않은 경우
+    if len(user_choices) == 0:
+        return -1
+
+    for choices in user_choices.values():
+        for choice in choices:
+            photo_id_count[choice] += 1
+
+    # 사진 별 선택 수 (내림차순 정렬)
+    sorted_photo_id_count = sorted(photo_id_count.items(), reverse=True, key=lambda item: item[1])
+    # base 사진, 받은 선택 수
+    base_photo_id = sorted_photo_id_count[0][0]
+
+    return base_photo_id
