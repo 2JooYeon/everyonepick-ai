@@ -5,7 +5,9 @@ import numpy as np
 import cv2
 from numpy.linalg import norm as l2norm
 from face_data import *
+from face_segmentation import *
 import imutils
+
 
 # 가장 많은 선택을 받은 사진의 인덱스를 찾는 함수
 def find_base_photo_id(user_choices, photo_id_count):
@@ -79,3 +81,59 @@ def resize_img(source_face, target_face, img):
         img_resized = imutils.resize(img_resized, width=int(img_resized.shape[1] * width_scale))
 
     return img_resized
+
+
+def adjust_swap_position(seg_label, source_face, target_face, target_img):
+    seg_x1, seg_y1, seg_x2, seg_y2 = get_seg_bbox(seg_label)
+
+    source_seg_h = seg_y2 - seg_y1
+    source_seg_w = seg_x2 - seg_x1
+
+    source_x1, source_y1, source_x2, source_y2 = get_bbox(source_face)
+    source_cx, source_cy = int((source_x1 + source_x2) // 2), int((source_y1 + source_y2) // 2)
+
+    target_x1, target_y1, target_x2, target_y2 = get_bbox(target_face)
+    target_cx, target_cy = int((target_x1 + target_x2) // 2), int((target_y1 + target_y2) // 2)
+
+    start_y = target_cy - (source_cy - seg_y1)
+    start_x = target_cx - (source_cx - seg_x1)
+    end_y = start_y + source_seg_h
+    end_x = start_x + source_seg_w
+
+    '''얼굴이 잘리는 경우 예외처리'''
+    t_start_x = 0
+    t_end_x = 0
+    t_start_y = 0
+    t_end_y = 0
+
+    s_start_x = 0
+    s_end_x = 0
+    s_start_y = 0
+    s_end_y = 0
+
+    if start_y <= 0:
+        t_start_y = 0
+        s_start_y = seg_y1 - start_y
+    if start_y > 0:
+        t_start_y = start_y
+        s_start_y = seg_y1
+    if start_x <= 0:
+        t_start_x = 0
+        s_start_x = seg_x1 - start_x
+    if start_x > 0:
+        t_start_x = start_x
+        s_start_x = seg_x1
+    if end_y > target_img.shape[0]:
+        t_end_y = target_img.shape[0]
+        s_end_y = seg_y2 - (end_y - target_img.shape[0])
+    if end_y <= target_img.shape[0]:
+        t_end_y = end_y
+        s_end_y = seg_y2
+    if end_x > target_img.shape[1]:
+        t_end_x = target_img.shape[1]
+        s_end_x = seg_x2 - (end_x - target_img.shape[1])
+    if end_x <= target_img.shape[1]:
+        t_end_x = end_x
+        s_end_x = seg_x2
+
+    return [(s_start_x, s_start_y, s_end_x, s_end_y), (t_start_x, t_start_y, t_end_x, t_end_y)]
