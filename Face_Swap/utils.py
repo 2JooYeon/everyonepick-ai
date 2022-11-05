@@ -60,3 +60,22 @@ def compute_face_similarity(group_embeddings, target_embedding):
     sims = np.dot(normed_target_embedding, normed_group_embeddings.T)
 
     return sims
+
+
+def resize_img(source_face, target_face, img):
+    source_x1, source_y1, source_x2, source_y2 = get_bbox(source_face)
+    source_bbox_w = source_x2 - source_x1
+    source_bbox_h = source_y2 - source_y1
+
+    target_x1, target_y1, target_x2, target_y2 = get_bbox(target_face)
+    target_bbox_w = target_x2 - target_x1
+    target_bbox_h = target_y2 - target_y1
+
+    height_scale = target_bbox_h / source_bbox_h
+    img_resized = imutils.resize(img, height=int(img.shape[0] * height_scale))
+
+    if (source_bbox_w * height_scale) < target_bbox_w:
+        width_scale = target_bbox_w / (source_bbox_w * height_scale)
+        img_resized = imutils.resize(img_resized, width=int(img_resized.shape[1] * width_scale))
+
+    return img_resized
