@@ -4,6 +4,9 @@ import logging
 from input_data import refine_input
 from utils import *
 from producer import *
+from face_data import *
+from face_swap import *
+
 
 consumer = KafkaConsumer("everyonepick.faceswap.request",
                          bootstrap_servers=["b-1.everyonepickkafka.v7ao1r.c3.kafka.ap-northeast-2.amazonaws.com:9092",
@@ -24,10 +27,19 @@ while True:
                 pick_id, photo_id_url, photo_id_count, user_choices, user_embedding = refine_input(record)
                 target_img_id = find_base_photo_id(user_choices, photo_id_count)
                 face_swap_list = list_of_face_swap(user_choices, target_img_id)
+                target_img = download_s3_url(photo_id_url[target_img_id])
                 # 합성이 필요 없는 경우
                 if len(face_swap_list) == 0:
-                    img = download_s3_url(photo_id_url[target_img_id])
-                    send_data(pick_id, img)
-
+                    send_data(pick_id, target_img)
+                # 합성이 필요한 경우
+                else:
+                    target_faces = get_faceobj(target_img)
+                    target_embeddings = get_embeddings(target_faces)
+                    for user_id, choice_id in face_swap_list:
+                        user_face_embedding = user_embedding[user_id]
+                        source_img = download_s3_url(photo_id_url[choice_id])
+                        swap_result = face_swap(user_face_embedding, source_img, target_img, target_faces)
+                        target_img = swap_result
+                    send_data(pick_id, swap_result)
             except:
                 logging.error(traceback.format_exc())
