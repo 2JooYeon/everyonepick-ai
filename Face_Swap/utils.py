@@ -1,3 +1,9 @@
+import requests
+from PIL import Image
+import io
+import numpy as np
+import cv2
+
 # 가장 많은 선택을 받은 사진의 인덱스를 찾는 함수
 def find_base_photo_id(user_choices, photo_id_count):
     # 아무도 선택 하지 않은 경우
@@ -26,3 +32,13 @@ def list_of_face_swap(user_choices, base_photo_id):
             user_id_choice.append((user_id, choices[0]))
 
     return user_id_choice
+
+
+# S3 url로부터 이미지를 다운받는 함수
+def download_s3_url(url):
+    response = requests.get(url)
+    img = Image.open(io.BytesIO(response.content))
+    img = np.array(img)
+    img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+
+    return img
