@@ -21,6 +21,7 @@ app = FaceAnalysis()
 app.prepare(ctx_id=0, det_size=(640, 640))
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
+pick_id = json_object["pick"]["id"]
 photo_id_url = {}
 photo_id_count = {}
 user_choices = defaultdict(list)
@@ -29,14 +30,13 @@ s3 = boto3.client('s3')
 
 '''전체 이미지 리스트에 대한 정보'''
 for photo in json_object["pick"]["photos"]:
-    photo_id_url[photo["id"]] = photo["photo_url"]
+    photo_id_url[photo["id"]] = photo["photoUrl"]
     photo_id_count[photo["id"]] = 0
 
 '''사용자 별 사진 선택에 대한 정보'''
-for pick in json_object["pick_info_photos"]:
-    user_id = pick["user_id"]
-    for photo_id in pick["photo_ids"]:
-        user_choices[user_id].append(photo_id["id"])
+for pick in json_object["pickInfoPhotos"]:
+    user_id = pick["userId"]
+    user_choices[user_id] = pick["photoIds"]
 
     '''사용자 별 임베딩 정보'''
     f = io.BytesIO()
