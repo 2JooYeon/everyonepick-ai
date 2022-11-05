@@ -3,6 +3,9 @@ from PIL import Image
 import io
 import numpy as np
 import cv2
+from numpy.linalg import norm as l2norm
+from face_data import *
+import imutils
 
 # 가장 많은 선택을 받은 사진의 인덱스를 찾는 함수
 def find_base_photo_id(user_choices, photo_id_count):
@@ -42,3 +45,18 @@ def download_s3_url(url):
     img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
 
     return img
+
+
+# target_embedding과 그룹 사진 얼굴들과의 유사도 측정하는 함수
+def compute_face_similarity(group_embeddings, target_embedding):
+    # 임베딩 정규화
+    normed_target_embedding = target_embedding / l2norm(target_embedding)
+    normed_group_embeddings = []
+    for embedding in group_embeddings:
+        normed_group_embeddings.append(embedding / l2norm(embedding))
+
+    normed_group_embeddings = np.array(normed_group_embeddings, dtype=np.float32)
+    # 코사인 유사도 계산
+    sims = np.dot(normed_target_embedding, normed_group_embeddings.T)
+
+    return sims
