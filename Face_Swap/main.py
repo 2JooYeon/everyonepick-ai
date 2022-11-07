@@ -23,7 +23,7 @@ while True:
     for _, records in consumer.poll(30000).items():
         for record in records:
             try:
-                pick_id, photo_id_url, photo_id_count, user_choices, user_embedding = refine_input(record)
+                pick_id, photo_id_url, photo_id_count, user_choices, user_embedding = refine_input(record.value)
                 target_img_id = find_base_photo_id(user_choices, photo_id_count)
                 face_swap_list = list_of_face_swap(user_choices, target_img_id)
                 target_img = download_s3_url(photo_id_url[target_img_id])
