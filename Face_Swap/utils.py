@@ -1,12 +1,12 @@
 import requests
 from PIL import Image
 import io
-import numpy as np
 import cv2
-from numpy.linalg import norm as l2norm
-from face_data import *
-from face_segmentation import *
 import imutils
+import numpy as np
+from numpy.linalg import norm as l2norm
+from face_data import get_bbox
+from face_segmentation import get_seg_bbox
 
 
 # 가장 많은 선택을 받은 사진의 인덱스를 찾는 함수

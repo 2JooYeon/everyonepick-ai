@@ -1,7 +1,7 @@
-import torch
 import facer
+import torch
 import numpy as np
-from face_data import *
+from face_data import get_kps
 
 
 def get_seg_label(img, face):

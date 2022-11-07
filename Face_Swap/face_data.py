@@ -1,7 +1,6 @@
 from insightface.app import FaceAnalysis
 import numpy as np
 import math
-from utils import *
 
 app = FaceAnalysis()
 app.prepare(ctx_id=0, det_size=(640, 640))
@@ -36,6 +35,7 @@ def get_kps(face):
 
 
 def find_user_face(faces, embedding):
+    from utils import compute_face_similarity
     embeddings = get_embeddings(faces)
     user_face_id = compute_face_similarity(embeddings, embedding).argmax()
 

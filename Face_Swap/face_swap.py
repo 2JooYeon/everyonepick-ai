@@ -1,10 +1,12 @@
-from face_data import *
-from utils import *
 import imutils
-from face_segmentation import *
+import numpy as np
+import cv2
+from utils import adjust_swap_position, resize_img
+from face_data import get_faceobj, find_user_face, get_angle
+from face_segmentation import get_seg_label
 
 
-def face_swap(user_face_embedding, source_img, target_img, target_faces):
+def swap_face(user_face_embedding, source_img, target_img, target_faces):
 
     source_faces = get_faceobj(source_img)
 

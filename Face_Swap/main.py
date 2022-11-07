@@ -1,11 +1,10 @@
 from kafka import KafkaConsumer
 from json import loads
-import logging
 from input_data import refine_input
-from utils import *
-from producer import *
-from face_data import *
-from face_swap import *
+from utils import find_base_photo_id, list_of_face_swap, download_s3_url
+from face_data import get_faceobj, get_embeddings
+from face_swap import swap_face
+from producer import send_data
 
 
 consumer = KafkaConsumer("everyonepick.faceswap.request",
@@ -38,8 +37,10 @@ while True:
                     for user_id, choice_id in face_swap_list:
                         user_face_embedding = user_embedding[user_id]
                         source_img = download_s3_url(photo_id_url[choice_id])
-                        swap_result = face_swap(user_face_embedding, source_img, target_img, target_faces)
+                        swap_result = swap_face(user_face_embedding, source_img, target_img, target_faces)
                         target_img = swap_result
                     send_data(pick_id, swap_result)
             except:
+                import logging
+                import traceback
                 logging.error(traceback.format_exc())
