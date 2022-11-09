@@ -90,7 +90,7 @@ def list_of_face_swap(user_choices, base_img):
 
 
 # insightface 모델로 얼굴 정보 분석하는 함수
-# bbox, kps, det_score, landmark_3d_69, pose, landmark_2d_106, gender, embedding 포함
+# bbox, kps, det_score, landmark_3d_68, pose, landmark_2d_106, gender, embedding 포함
 def face_analysis(img_path):
     img = cv2.imread(img_path)
     img = img[:, :, ::-1]
