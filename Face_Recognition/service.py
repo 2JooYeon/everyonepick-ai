@@ -19,15 +19,15 @@ svc = bentoml.Service("face_recognition", runners=[face_detect_runner, face_reco
 
 
 class UserFace(BaseModel):
-    user_id: int
+    userId: int
     image: str
 
 class PhotoInfo(BaseModel):
     id: int
-    photo_url: str
+    photoUrl: str
 
 class PhotoList(BaseModel):
-    user_cnt: int
+    userCnt: int
     photos: List[PhotoInfo]
 
 
@@ -42,7 +42,7 @@ async def recognize(input_data: UserFace, ctx:bentoml.Context):
     except:
         ctx.response.status_code = 400
         return {"message": "Unable to decode the image."}
-    user_id = str(input_data.user_id)
+    user_id = str(input_data.userId)
     np_img = np.array(image)
     cv_img = cv2.cvtColor(np_img, cv2.COLOR_RGB2BGR)
     bboxes, kpss = await face_detect_runner.detect.async_run(cv_img)
@@ -71,7 +71,7 @@ async def detect(input_data: PhotoList, ctx:bentoml.Context):
     img_list = []
     try:
         for photo in input_data.photos:
-            response = requests.get(photo.photo_url)
+            response = requests.get(photo.photoUrl)
             img = Image.open(io.BytesIO(response.content))
             img = np.array(img)
             img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
@@ -82,7 +82,7 @@ async def detect(input_data: PhotoList, ctx:bentoml.Context):
 
     for img in img_list:
         bboxes, kpss = await face_detect_runner.detect.async_run(img)
-        if len(bboxes) < input_data.user_cnt:
+        if len(bboxes) < input_data.userCnt:
             ctx.response.status_code = 400
             return {"message": "The number of faces detected is less than the user_cnt"}
 
