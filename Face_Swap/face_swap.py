@@ -25,12 +25,12 @@ def swap_face(user_face_embedding, source_img, target_img, target_faces):
     source_face = find_user_face(source_faces, user_face_embedding)
     source_img_resized = resize_img(source_face, target_face, source_img_rotated)
 
+    source_faces = get_faceobj(source_img_resized)
+    source_face = find_user_face(source_faces, user_face_embedding)
+
     '''segmentation 진행'''
     source_seg_label = get_seg_label(source_img_resized, source_face)
     target_seg_label = get_seg_label(target_img, target_face)
-
-    source_faces = get_faceobj(source_img_resized)
-    source_face = find_user_face(source_faces, user_face_embedding)
 
     source_position, target_position = adjust_swap_position(source_seg_label, source_face, target_face, target_img)
     s_start_x, s_start_y, s_end_x, s_end_y = source_position
