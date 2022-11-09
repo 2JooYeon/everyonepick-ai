@@ -33,6 +33,9 @@ def list_of_face_swap(user_choices, base_photo_id):
 
     for user_id, choices in user_choices.items():
         if base_photo_id not in choices:
+            # 마음에 드는 사진을 선택하지 않았을 때에 대한 처리
+            if len(choices) == 0:
+                continue
             # 첫 번째 선택 사진을 source 사진으로 결정
             user_id_choice.append((user_id, choices[0]))
 
