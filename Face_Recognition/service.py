@@ -9,15 +9,27 @@ import io
 from pydantic import BaseModel
 from PIL import Image
 import base64
+from typing import List
+import requests
 
 face_detect_runner = bentoml.Runner(FaceDetectRunnable, name="face_detect", models=[bentoml.onnx.get("face_detection:latest")])
 face_recognize_runner = bentoml.Runner(FaceRecognitionRunnable, name="face_recognize_runner", models=[bentoml.onnx.get("face_recognition:latest")])
 
 svc = bentoml.Service("face_recognition", runners=[face_detect_runner, face_recognize_runner])
 
+
 class UserFace(BaseModel):
-    user_id : int
-    image : str
+    user_id: int
+    image: str
+
+class PhotoInfo(BaseModel):
+    id: int
+    photo_url: str
+
+class PhotoList(BaseModel):
+    user_cnt: int
+    photos: List[PhotoInfo]
+
 
 input_spec = JSON(pydantic_model=UserFace)
 output_spec = JSON()
@@ -49,4 +61,28 @@ async def recognize(input_data: UserFace, ctx:bentoml.Context):
     byte_embedding = io.BytesIO(str_embedding.encode())
     s3 = boto3.client('s3')
     s3.upload_fileobj(byte_embedding, 'everyonepick-ai-face-embedding-bucket', f"face{user_id}_embedding.txt")
-    return {"message":"Ok", "data":{"user_id":user_id, "face_embedding":embedding}}
+    return {"message":"Ok", "data": {"user_id":user_id, "face_embedding":embedding}}
+
+
+
+@svc.api(input=JSON(pydantic_model=PhotoList), output=JSON(), route="/api/detect")
+async def detect(input_data: PhotoList, ctx:bentoml.Context):
+    img_list = []
+    try:
+        for photo in input_data.photos:
+            response = requests.get(photo.photo_url)
+            img = Image.open(io.BytesIO(response.content))
+            img = np.array(img)
+            img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+            img_list.append(img)
+    except:
+        ctx.response.status_code = 400
+        return {"message": "Unable to download photo from url."}
+
+    for img in img_list:
+        bboxes, kpss = await face_detect_runner.detect.async_run(img)
+        if len(bboxes) < input_data.user_cnt:
+            ctx.response.status_code = 400
+            return {"message": "The number of faces detected is less than the user_cnt"}
+
+    return {"message": "Ok"}
