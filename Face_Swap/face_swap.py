@@ -3,7 +3,7 @@ import numpy as np
 import cv2
 from utils import adjust_swap_position, resize_img
 from face_data import get_faceobj, find_user_face, get_angle
-from face_segmentation import get_seg_label
+from face_segmentation import get_seg_label, get_seg_bbox
 
 
 def swap_face(user_face_embedding, source_img, target_img, target_faces):
@@ -61,6 +61,35 @@ def swap_face(user_face_embedding, source_img, target_img, target_faces):
     '''face segmentation 보다 아래에 있는 머리는 지우도록'''
     source_hair_seg[source_face_seg_y2:, :] = 0
     source_hair_seg = source_hair_seg.astype(np.uint8)
+
+    seg_x1, seg_y1, seg_x2, seg_y2 = get_seg_bbox(source_seg_label)
+    dy = source_face_seg_y2 - seg_y1
+    dx = seg_x2 - seg_x1
+
+    '''헤어 윗 부분 픽셀 탈락'''
+    for x in range(t_start_x, t_end_x + 1):
+        try:
+            temp = np.where(source_hair_seg[:, x] > 0)
+            rm = int(dy // 20)
+            if len(temp[0]) < rm:
+                source_hair_seg[temp[0][0]:temp[0][-1], x] = 0
+            else:
+                source_hair_seg[temp[0][0]:temp[0][rm], x] = 0
+        except:
+            continue
+
+    '''헤어 옆 부분 픽셀 탈락 '''
+    for y in range(t_start_y, source_face_seg_y2 + 1):
+        try:
+            temp = np.where(source_hair_seg[y, :] > 0)
+            rm = int(dx // 20)
+            if len(temp[0]) < rm:
+                source_hair_seg[y, temp[0][0]:temp[0][-1]] = 0
+            else:
+                source_hair_seg[y, temp[0][0]:temp[0][rm]] = 0
+                source_hair_seg[y, temp[0][-rm]:temp[0][-1] + 1] = 0
+        except:
+            continue
 
     '''target (hair+얼굴) 픽셀 범위에 존재하는 source hair 픽셀만 남기도록'''
     hair_mask = cv2.bitwise_and(source_hair_seg, source_hair_seg, mask=target_seg_label)
