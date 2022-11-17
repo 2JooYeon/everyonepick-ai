@@ -9,7 +9,7 @@ from face_data import get_bbox
 from face_segmentation import get_seg_bbox
 
 
-# 가장 많은 선택을 받은 사진의 인덱스를 찾는 함수
+''' 가장 많은 선택을 받은 사진의 인덱스를 찾는 함수 '''
 def find_base_photo_id(user_choices, photo_id_count):
     # 아무도 선택 하지 않은 경우
     if len(user_choices) == 0:
@@ -27,22 +27,22 @@ def find_base_photo_id(user_choices, photo_id_count):
     return base_photo_id
 
 
-# face swap이 필요한 user_id와 source 사진을 찾는 함수
+''' face swap이 필요한 user_id와 source 사진 id를 찾는 함수 '''
 def list_of_face_swap(user_choices, base_photo_id):
     user_id_choice = []
 
     for user_id, choices in user_choices.items():
         if base_photo_id not in choices:
-            # 마음에 드는 사진을 선택하지 않았을 때에 대한 처리
+            # 마음에 드는 사진을 선택 하지 않았을 때에 대한 처리
             if len(choices) == 0:
                 continue
-            # 첫 번째 선택 사진을 source 사진으로 결정
+            # 첫 번째 선택 사진을 source 사진으로 처리
             user_id_choice.append((user_id, choices[0]))
 
     return user_id_choice
 
 
-# S3 url로부터 이미지를 다운받는 함수
+''' S3 url로부터 이미지를 다운받는 함수 '''
 def download_s3_url(url):
     response = requests.get(url)
     img = Image.open(io.BytesIO(response.content))
@@ -52,7 +52,7 @@ def download_s3_url(url):
     return img
 
 
-# target_embedding과 그룹 사진 얼굴들과의 유사도 측정하는 함수
+'''target_embedding과 group_embeddings과의 유사도를 측정하는 함수'''
 def compute_face_similarity(group_embeddings, target_embedding):
     # 임베딩 정규화
     normed_target_embedding = target_embedding / l2norm(target_embedding)
@@ -67,6 +67,7 @@ def compute_face_similarity(group_embeddings, target_embedding):
     return sims
 
 
+''' source 얼굴과 target 얼굴의 bounding box 크기를 계산해서 source 사진을 resizing 하는 함수 '''
 def resize_img(source_face, target_face, img):
     source_x1, source_y1, source_x2, source_y2 = get_bbox(source_face)
     source_bbox_w = source_x2 - source_x1
@@ -86,6 +87,7 @@ def resize_img(source_face, target_face, img):
     return img_resized
 
 
+''' target 사진에서의 target 얼굴 bounding box의 중심 좌표에 source 얼굴 bounding box 중심이 위치하도록 crop할 픽셀 범위를 반환하는 함수'''
 def adjust_swap_position(seg_label, source_face, target_face, target_img):
     seg_x1, seg_y1, seg_x2, seg_y2 = get_seg_bbox(seg_label)
 
@@ -103,7 +105,7 @@ def adjust_swap_position(seg_label, source_face, target_face, target_img):
     end_y = start_y + source_seg_h
     end_x = start_x + source_seg_w
 
-    '''얼굴이 잘리는 경우 예외처리'''
+    # 얼굴이 잘리는 경우 예외처리
     t_start_x = 0
     t_end_x = 0
     t_start_y = 0
