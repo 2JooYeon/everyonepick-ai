@@ -128,16 +128,16 @@ def adjust_swap_position(seg_label, source_face, target_face, target_img):
     if start_x > 0:
         t_start_x = start_x
         s_start_x = seg_x1
-    if end_y > target_img.shape[0]:
-        t_end_y = target_img.shape[0]
-        s_end_y = seg_y2 - (end_y - target_img.shape[0])
-    if end_y <= target_img.shape[0]:
+    if end_y >= target_img.shape[0]:
+        t_end_y = target_img.shape[0] - 1
+        s_end_y = seg_y2 - (end_y - (target_img.shape[0] - 1))
+    if end_y < target_img.shape[0]:
         t_end_y = end_y
         s_end_y = seg_y2
-    if end_x > target_img.shape[1]:
-        t_end_x = target_img.shape[1]
-        s_end_x = seg_x2 - (end_x - target_img.shape[1])
-    if end_x <= target_img.shape[1]:
+    if end_x >= target_img.shape[1]:
+        t_end_x = target_img.shape[1] - 1
+        s_end_x = seg_x2 - (end_x - (target_img.shape[1] - 1))
+    if end_x < target_img.shape[1]:
         t_end_x = end_x
         s_end_x = seg_x2
 
